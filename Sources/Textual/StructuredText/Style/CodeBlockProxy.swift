@@ -10,6 +10,10 @@ extension StructuredText {
       self.content = content
     }
 
+    // Expose raw code string for custom code block renderers (Mermaid, WebView, copy, screenshot)
+    // wangqi modified 2026-03-17
+    public var code: String { String(content.characters) }
+
     /// Copies the code block contents to the system pasteboard.
     ///
     /// Textual writes both a plain-text and an HTML representation when possible.

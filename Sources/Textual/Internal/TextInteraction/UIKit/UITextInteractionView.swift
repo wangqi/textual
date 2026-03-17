@@ -107,12 +107,15 @@
       addInteraction(selectionInteraction)
     }
 
+    // Clear selection on tap outside selected text (tap-to-deselect UX)
+    // wangqi modified 2026-03-17
     @objc private func handleTap(_ gesture: UITapGestureRecognizer) {
       let location = gesture.location(in: self)
-      guard let url = model.url(for: location) else {
-        return
+      if let url = model.url(for: location) {
+        openURL(url)
+      } else if model.selectedRange != nil {
+        model.selectedRange = nil
       }
-      openURL(url)
     }
 
     @objc private func share(_ sender: Any?) {

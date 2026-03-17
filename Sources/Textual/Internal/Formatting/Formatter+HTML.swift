@@ -1,5 +1,13 @@
 import Foundation
 
+// Public HTML rendering for markdown-to-HTML export
+// wangqi modified 2026-03-17
+extension AttributedString {
+  public func renderHTML() -> String {
+    Formatter(self).html()
+  }
+}
+
 extension Formatter {
   func html() -> String {
     blockNodes.renderHTML()

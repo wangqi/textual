@@ -97,3 +97,23 @@ extension EnvironmentValues {
   @usableFromInline
   @Entry var overflowMode = OverflowMode.scroll
 }
+
+// Public API to exclude custom views from parent text selection hit testing
+// wangqi modified 2026-03-17
+extension View {
+  /// Excludes this view from the parent `StructuredText` selection overlay's hit-testing.
+  ///
+  /// Apply to custom code block styles (via `ClosureCodeBlockStyle`) so that buttons
+  /// embedded in code block headers are not blocked by the `UITextInteractionView` overlay.
+  public func textualExcludeFromTextSelection() -> some View {
+    self.background(
+      GeometryReader { geometry in
+        Color.clear
+          .preference(
+            key: OverflowFrameKey.self,
+            value: [geometry.frame(in: .textContainer)]
+          )
+      }
+    )
+  }
+}

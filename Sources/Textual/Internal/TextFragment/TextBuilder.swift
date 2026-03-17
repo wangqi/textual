@@ -64,6 +64,22 @@ extension Text {
     attachmentSizes: [AttachmentKey: CGSize],
     in environment: TextEnvironmentValues
   ) {
+    // Fast path: when there are no attachment or link runs (e.g., syntax-highlighted code
+    // blocks), create a single Text(AttributedString) to avoid building a deeply-nested
+    // Text concat tree. Both Text("\(t1)\(t2)") and t1+t2 produce O(N) recursion depth in
+    // SwiftUI's resolve() when N is large (~300+ tokens), causing a stack overflow.
+    // Text(AttributedString) renders all SwiftUI attribute scopes (foreground color, font,
+    // etc.) correctly without any nesting.
+    // wangqi modified 2026-03-17
+    let hasSpecialRuns = attributedString.runs.contains {
+      $0.textual.attachment != nil || $0.link != nil
+    }
+    guard hasSpecialRuns else {
+      let fullRange = attributedString.startIndex..<attributedString.endIndex
+      self = Text(AttributedString(attributedString[fullRange]))
+      return
+    }
+
     let textValues = attributedString.runs.map { run in
       var text: Text
 
@@ -96,9 +112,7 @@ extension Text {
       return text
     }
 
-    self = textValues.reduce(Text(verbatim: "")) { partialResult, text in
-      Text("\(partialResult)\(text)")
-    }
+    self = textValues.reduce(Text(verbatim: "")) { $0 + $1 }
   }
 
   private init(placeholderSize size: CGSize) {
