@@ -53,8 +53,10 @@ extension StructuredText {
 
 extension StructuredText.OrderedListMarker where Self == StructuredText.DecimalListMarker {
   /// The default decimal ordered-list marker.
+  // Reduced minWidth for compact list display on mobile screens
+  // wangqi modified 2026-03-29
   public static var decimal: Self {
-    .init()
+    .init(minWidth: .fontScaled(0.8))
   }
 }
 

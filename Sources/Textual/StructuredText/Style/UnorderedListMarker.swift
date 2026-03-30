@@ -60,19 +60,21 @@ extension StructuredText {
 }
 
 extension StructuredText.UnorderedListMarker where Self == StructuredText.SymbolListMarker {
+  // Reduced minWidth for compact list display on mobile screens
+  // wangqi modified 2026-03-29
   /// A filled-circle marker.
   public static var disc: Self {
-    .init(symbolName: "circle.fill", scale: 0.33)
+    .init(symbolName: "circle.fill", scale: 0.33, minWidth: .fontScaled(0.8))
   }
 
   /// An outlined-circle marker.
   public static var circle: Self {
-    .init(symbolName: "circle", scale: 0.33)
+    .init(symbolName: "circle", scale: 0.33, minWidth: .fontScaled(0.8))
   }
 
   /// A filled-square marker.
   public static var square: Self {
-    .init(symbolName: "square.fill", scale: 0.33)
+    .init(symbolName: "square.fill", scale: 0.33, minWidth: .fontScaled(0.8))
   }
 }
 
