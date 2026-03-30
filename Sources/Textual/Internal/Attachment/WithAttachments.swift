@@ -31,15 +31,23 @@ struct WithAttachments<Content: View>: View {
   }
 
   var body: some View {
-    content(model.resolvedAttributedString ?? attributedString)
-      .task(id: attributedString) {
-        await model.resolveAttachments(
-          in: attributedString,
-          imageAttachmentLoader: imageAttachmentLoader,
-          emojiAttachmentLoader: emojiAttachmentLoader,
-          environment: colorEnvironment
-        )
-      }
+    // Skip task entirely for text-only content to avoid churn on every streaming token
+    // wangqi modified 2026-03-30
+    let hasAttachments = attributedString.containsValues(for: [\.imageURL, \.textual.emojiURL])
+
+    if hasAttachments {
+      content(model.resolvedAttributedString ?? attributedString)
+        .task(id: attributedString) {
+          await model.resolveAttachments(
+            in: attributedString,
+            imageAttachmentLoader: imageAttachmentLoader,
+            emojiAttachmentLoader: emojiAttachmentLoader,
+            environment: colorEnvironment
+          )
+        }
+    } else {
+      content(attributedString)
+    }
   }
 }
 

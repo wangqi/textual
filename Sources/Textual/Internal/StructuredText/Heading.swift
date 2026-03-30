@@ -20,8 +20,9 @@ extension StructuredText {
       )
       let resolvedStyle = headingStyle.resolve(configuration: configuration)
 
+      // Remove .id(content.slugified()) to prevent view identity destruction during streaming
+      // wangqi modified 2026-03-30
       AnyView(resolvedStyle)
-        .id(content.slugified())
     }
 
     private var label: some View {
