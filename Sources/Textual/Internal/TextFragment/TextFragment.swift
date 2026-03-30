@@ -50,8 +50,11 @@ struct TextFragment<Content: AttributedStringProtocol>: View {
       .modifier(TextLinkInteraction())
   }
 
+  // If textBuilder is not yet set (first render), compute text directly from current content and
+  // environment so math/attachment blocks don't flash at line-height before their formula height.
+  // wangqi modified 2026-03-29
   private var text: Text {
-    textBuilder?.text ?? Text(verbatim: "")
+    textBuilder?.text ?? TextBuilder(content, environment: textEnvironment).text
   }
 }
 
