@@ -11,7 +11,12 @@ extension StructuredText {
   struct Table: View {
     @Environment(\.tableStyle) private var tableStyle
 
-    @State private var spacing = TableCell.Spacing()
+    // Initialize with the value all bundled styles emit (borderWidth=1) so the first render
+    // already uses 1pt spacing. When onPreferenceChange fires with Spacing(1,1), SwiftUI
+    // detects no state change (Hashable equality) and skips the second render pass that
+    // previously caused height instability and scroll-position jumps in the parent chat view.
+    // wangqi modified 2026-03-29
+    @State private var spacing = TableCell.Spacing(horizontal: 1, vertical: 1)
 
     private let intent: PresentationIntent.IntentType?
     private let content: AttributedSubstring
