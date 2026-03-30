@@ -36,13 +36,8 @@ struct MathAttachment: Attachment {
     -typographicBounds(in: environment).descent
   }
 
-  // Use unconstrained width (proposedWidth=0) regardless of proposal so formula height is stable
-  // during streaming. Container-width-based line-breaking causes size changes when sizeChanged fires,
-  // scrolling the parent chat view. Wide formulas render at natural width; horizontal overflow is
-  // acceptable for block math display.
-  // wangqi modified 2026-03-29
   func sizeThatFits(_ proposal: ProposedViewSize, in environment: TextEnvironmentValues) -> CGSize {
-    typographicBounds(fitting: .init(width: nil, height: proposal.height), in: environment).size
+    typographicBounds(fitting: proposal, in: environment).size
   }
 
   private func typographicBounds(
