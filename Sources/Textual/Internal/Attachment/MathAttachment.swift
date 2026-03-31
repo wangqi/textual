@@ -33,11 +33,26 @@ struct MathAttachment: Attachment {
   }
 
   func baselineOffset(in environment: TextEnvironmentValues) -> CGFloat {
-    -typographicBounds(in: environment).descent
+    // Return 0 for fallback (Text handles its own baseline)
+    // wangqi modified 2026-03-31
+    let bounds = typographicBounds(in: environment)
+    guard bounds.size.width > 0 else { return 0 }
+    return -bounds.descent
   }
 
   func sizeThatFits(_ proposal: ProposedViewSize, in environment: TextEnvironmentValues) -> CGSize {
-    typographicBounds(fitting: proposal, in: environment).size
+    let bounds = typographicBounds(fitting: proposal, in: environment)
+    // Fallback: estimate monospaced text size when parse fails
+    // wangqi modified 2026-03-31
+    guard bounds.size.width > 0 else {
+      let text = displayStyle == .block ? "$$\(latex)$$" : "$\(latex)$"
+      let fontSize = FontScaled(environment.mathProperties.fontScale).resolve(in: environment) * 0.7
+      let charWidth = fontSize * 0.6
+      let width = min(CGFloat(text.count) * charWidth, proposal.width ?? 300)
+      let height = fontSize * 1.4
+      return CGSize(width: width, height: height)
+    }
+    return bounds.size
   }
 
   private func typographicBounds(
@@ -63,15 +78,36 @@ private struct MathView: View {
   let style: MathAttachment.DisplayStyle
 
   var body: some View {
-    Math(latex)
-      .mathFont(
-        .init(
-          name: .init(environment.mathProperties.fontName),
-          size: FontScaled(environment.mathProperties.fontScale).resolve(in: environment)
+    // Show raw LaTeX as fallback when the expression fails to parse
+    // wangqi modified 2026-03-31
+    let fontSize = FontScaled(environment.mathProperties.fontScale).resolve(in: environment)
+    let bounds = Math.typographicBounds(
+      for: latex,
+      fitting: .unspecified,
+      font: .init(
+        name: .init(environment.mathProperties.fontName),
+        size: fontSize
+      ),
+      style: .init(style)
+    )
+    if bounds.size.width > 0 {
+      Math(latex)
+        .mathFont(
+          .init(
+            name: .init(environment.mathProperties.fontName),
+            size: fontSize
+          )
         )
-      )
-      .mathTypesettingStyle(.init(style))
-      .mathRenderingMode(.monochrome)
+        .mathTypesettingStyle(.init(style))
+        .mathRenderingMode(.monochrome)
+    } else {
+      let fallbackText = style == .block ? "$$\(latex)$$" : "$\(latex)$"
+      Text(fallbackText)
+        .font(.system(.caption, design: .monospaced))
+        .foregroundStyle(.secondary)
+        .accessibilityLabel("Math expression")
+        .accessibilityValue(latex)
+    }
   }
 }
 
