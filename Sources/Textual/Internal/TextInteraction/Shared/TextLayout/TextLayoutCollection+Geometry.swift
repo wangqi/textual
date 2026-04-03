@@ -207,6 +207,9 @@
     }
 
     func runSliceSelectionRect(at indexPath: IndexPath) -> CGRect {
+      // Bounds-check stale index paths (layout vs selection state race)
+      // wangqi modified 2026-04-03
+      guard isValidIndexPath(indexPath) else { return .zero }
       let layout = layouts[indexPath.layout]
       let line = layout.lines[indexPath.line]
       let runSlice = line.runs[indexPath.run].slices[indexPath.runSlice]
@@ -253,12 +256,19 @@
     }
 
     fileprivate func runSliceRect(at indexPath: IndexPath) -> CGRect {
+      // Bounds-check stale index paths (layout vs selection state race)
+      // wangqi modified 2026-04-03
+      guard isValidIndexPath(indexPath) else { return .zero }
       let layout = layouts[indexPath.layout]
       let runSlice = layout.lines[indexPath.line].runs[indexPath.run].slices[indexPath.runSlice]
       return runSlice.typographicBounds.offsetBy(dx: layout.origin.x, dy: layout.origin.y)
     }
 
     fileprivate func lineRect(at indexPath: IndexPath) -> CGRect {
+      // Bounds-check stale index paths (layout vs selection state race)
+      // wangqi modified 2026-04-03
+      guard indexPath.layout < layouts.count,
+            indexPath.line < layouts[indexPath.layout].lines.count else { return .zero }
       let layout = layouts[indexPath.layout]
       let line = layout.lines[indexPath.line]
       return line.typographicBounds.offsetBy(dx: layout.origin.x, dy: layout.origin.y)

@@ -74,7 +74,22 @@
       }
     }
 
+    // Bounds-check stale index paths (layout vs selection state race)
+    // wangqi modified 2026-04-03
+    func isValidIndexPath(_ indexPath: IndexPath) -> Bool {
+      guard indexPath.layout < layouts.count else { return false }
+      let layout = layouts[indexPath.layout]
+      guard indexPath.line < layout.lines.count else { return false }
+      let line = layout.lines[indexPath.line]
+      guard indexPath.run < line.runs.count else { return false }
+      let run = line.runs[indexPath.run]
+      return indexPath.runSlice < run.slices.count
+    }
+
     func localCharacterRange(at indexPath: IndexPath) -> Range<Int> {
+      // Bounds-check stale index paths (layout vs selection state race)
+      // wangqi modified 2026-04-03
+      guard isValidIndexPath(indexPath) else { return 0..<0 }
       let line = layouts[indexPath.layout].lines[indexPath.line]
       return line.runs[indexPath.run]
         .slices[indexPath.runSlice]
@@ -82,6 +97,9 @@
     }
 
     func layoutDirection(at indexPath: IndexPath) -> LayoutDirection {
+      // Bounds-check stale index paths (layout vs selection state race)
+      // wangqi modified 2026-04-03
+      guard isValidIndexPath(indexPath) else { return .leftToRight }
       let line = layouts[indexPath.layout].lines[indexPath.line]
       return line.runs[indexPath.run].layoutDirection
     }
