@@ -52,9 +52,12 @@ extension StructuredText {
     }
 
     public func makeBody(configuration: Configuration) -> some View {
+      // Mark bullet marker as decorative — VoiceOver was reading SF Symbol name.
+      // wangqi modified 2026-05-23
       SwiftUI.Image(systemName: symbolName)
         .textual.fontScale(scale)
         .textual.frame(minWidth: minWidth, alignment: .trailing)
+        .accessibilityHidden(true)
     }
   }
 }

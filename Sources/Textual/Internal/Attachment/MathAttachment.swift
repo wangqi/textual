@@ -91,6 +91,8 @@ private struct MathView: View {
       style: .init(style)
     )
     if bounds.size.width > 0 {
+      // Add VoiceOver label/value to rendered Math — fallback Text branch had them but success branch was silent.
+      // wangqi modified 2026-05-23
       Math(latex)
         .mathFont(
           .init(
@@ -100,6 +102,8 @@ private struct MathView: View {
         )
         .mathTypesettingStyle(.init(style))
         .mathRenderingMode(.monochrome)
+        .accessibilityLabel("Math expression")
+        .accessibilityValue(latex)
     } else {
       let fallbackText = style == .block ? "$$\(latex)$$" : "$\(latex)$"
       Text(fallbackText)
