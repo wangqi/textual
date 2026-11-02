@@ -89,8 +89,10 @@ extension PatternTokenizer.Pattern {
     .init(regex: /(?s)\$\$(.+?)\$\$/, tokenType: .mathBlock)
   }
 
+  // Pandoc rule: no space after the opening $, no space or backslash before the closing $, no digit after it,
+  // so "$12.99/month or $129/year" stays text. // wangqi modified 2026-10-27
   static var mathInline: Self {
-    .init(regex: /\$(?!\$)((?:\\\$|[^$\n])+)\$/, tokenType: .mathInline)
+    .init(regex: /\$(?![\s$])((?:\\\$|[^$\n])*?[^\s\\$])\$(?!\d)/, tokenType: .mathInline)
   }
 }
 

@@ -54,14 +54,23 @@ extension StructuredText {
           let rowRun = rowRuns[rowIndex]
           let rowContent = content[rowRun.range]
           let columnRuns = rowContent.blockRuns(parent: rowRun.intent)
+          // Foundation emits no run for an empty cell, so placing cells by run position shifted every later cell
+          // one column left (`| | A | B |` drew A over the first column). Place each cell by its own column index
+          // and draw an empty cell in each gap. // wangqi modified 2026-10-27
+          let slots = Self.cellSlots(for: columnRuns, columnCount: columns.count)
 
           GridRow {
-            ForEach(columnRuns.indices, id: \.self) { columnIndex in
-              let cellRun = columnRuns[columnIndex]
-              let cellContent = rowContent[cellRun.range]
+            ForEach(slots.indices, id: \.self) { columnIndex in
+              if let runIndex = slots[columnIndex] {
+                let cellRun = columnRuns[runIndex]
+                let cellContent = rowContent[cellRun.range]
 
-              TableCell(cellContent, row: rowIndex, column: columnIndex)
-                .gridColumnAlignment(alignment(for: columnIndex))
+                TableCell(cellContent, row: rowIndex, column: columnIndex)
+                  .gridColumnAlignment(alignment(for: columnIndex))
+              } else {
+                TableCell(Self.emptyCellContent, row: rowIndex, column: columnIndex)
+                  .gridColumnAlignment(alignment(for: columnIndex))
+              }
             }
           }
         }
@@ -70,6 +79,30 @@ extension StructuredText {
 
     private var indentationLevel: Int {
       content.runs.first?.presentationIntent?.indentationLevel ?? 0
+    }
+
+    // Maps each grid column to the index of the cell run that fills it, nil for an empty cell Foundation left out.
+    // Falls back to run order when a run carries no table-cell column index. // wangqi modified 2026-10-27
+    nonisolated static func cellSlots(for columnRuns: AttributedString.BlockRuns, columnCount: Int) -> [Int?] {
+      var cellColumns: [Int] = []
+      for run in columnRuns {
+        guard case .tableCell(let columnIndex) = run.intent?.kind, columnIndex >= 0 else {
+          return columnRuns.indices.map { Optional($0) }
+        }
+        cellColumns.append(columnIndex)
+      }
+      let width = max(columnCount, (cellColumns.max() ?? -1) + 1)
+      var slots = [Int?](repeating: nil, count: width)
+      for (runIndex, columnIndex) in cellColumns.enumerated() where slots[columnIndex] == nil {
+        slots[columnIndex] = runIndex
+      }
+      return slots
+    }
+
+    // wangqi modified 2026-10-27
+    private static var emptyCellContent: AttributedSubstring {
+      let empty = AttributedString()
+      return empty[empty.startIndex..<empty.endIndex]
     }
 
     private func alignment(for columnIndex: Int) -> HorizontalAlignment {

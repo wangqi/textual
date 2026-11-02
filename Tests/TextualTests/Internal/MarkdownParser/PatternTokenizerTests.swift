@@ -196,4 +196,52 @@ struct PatternTokenizerTests {
       ]
     )
   }
+
+  // Currency amounts must stay text (pandoc inline-math rule). // wangqi modified 2026-10-27
+  @Test(arguments: [
+    "$12.99/month or $129/year",
+    "$5 and $10",
+    "($10-$20)",
+    "$10/$20",
+  ])
+  func currencyStaysText(_ input: String) throws {
+    // given
+    let tokenizer = PatternTokenizer(patterns: [.mathBlock, .mathInline])
+
+    // when
+    let tokens = try tokenizer.tokenize(input)
+
+    // then
+    #expect(tokens == [.init(type: .text, content: input)])
+  }
+
+  // Single-character and multiple inline math spans still parse. // wangqi modified 2026-10-27
+  @Test func inlineMathSingleCharacter() throws {
+    // given
+    let tokenizer = PatternTokenizer(patterns: [.mathBlock, .mathInline])
+
+    // when
+    let tokens = try tokenizer.tokenize("$x$")
+
+    // then
+    #expect(tokens == [.init(type: .mathInline, content: "$x$", capturedContent: "x")])
+  }
+
+  // wangqi modified 2026-10-27
+  @Test func inlineMathTwoSpans() throws {
+    // given
+    let tokenizer = PatternTokenizer(patterns: [.mathBlock, .mathInline])
+
+    // when
+    let tokens = try tokenizer.tokenize("$a+b$ and $c$")
+
+    // then
+    #expect(
+      tokens == [
+        .init(type: .mathInline, content: "$a+b$", capturedContent: "a+b"),
+        .init(type: .text, content: " and "),
+        .init(type: .mathInline, content: "$c$", capturedContent: "c"),
+      ]
+    )
+  }
 }
